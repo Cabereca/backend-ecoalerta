@@ -1,9 +1,8 @@
 import { Router } from 'express';
+import employeeRoutes from './routes/employeeRoutes';
 
 const routes = Router();
 
-routes.get('/', (req, res) => {
-  res.send({ message: 'Hello World' });
-});
+routes.use('/employee', employeeRoutes);
 
 export default routes;
