@@ -32,6 +32,15 @@ const findAllOccurencies = async () => {
   return occs as IGetOccurrence[];
 };
 
+const findOccurrencies = async (userId: string) => {
+  const oc = await prisma.occurrence.findManyByUser(userId);
+  if (!oc) {
+    throw new NotFoundError('Occurrence not found');
+  }
+
+  return oc;
+}
+
 const updateOccurencies = async (
   id: string,
   data: Partial<ICreateOccurrence>
@@ -41,6 +50,7 @@ const updateOccurencies = async (
       id
     }
   });
+  
   if (!oc) {
     throw new NotFoundError('Occurrence not found');
   }
@@ -49,12 +59,9 @@ const updateOccurencies = async (
       id
     },
     data: {
-      title: data.title || oc.title,
-      description: data.description || oc.description,
-      dateTime: data.dateTime || oc.dateTime,
-      status: data.status || oc.status,
-      userId: data.userId || oc.userId,
-      employeeId: data.employeeId || oc.employeeId
+      title: data.title ?? oc.title,
+      description: data.description ?? oc.description,
+      dateTime: data.dateTime ?? oc.dateTime,
     }
   });
   if (!updatedOccurrence) {
@@ -131,6 +138,7 @@ const updateOccurrenceStatus = async (
 export default {
   createOccurrence,
   findAllOccurencies,
+  findOccurrencies,
   updateOccurencies,
   updateOccurrenceStatus,
   deleteOccurencies

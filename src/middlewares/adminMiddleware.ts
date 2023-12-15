@@ -37,8 +37,8 @@ export const adminMiddleware = async (
     }
     await redisClient.set('employee' + email, JSON.stringify(employee));
   }
+  
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { password, ...userWithoutPassword } = employee;
-  req.user = userWithoutPassword;
+  req.employee = employee;
   next();
 };

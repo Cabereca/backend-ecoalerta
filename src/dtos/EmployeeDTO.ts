@@ -1,4 +1,4 @@
-import { type IOccurrence } from './OccurrenceDTO';
+import { type IGetOccurrence } from './OccurrenceDTO';
 
 export interface IGetEmployee {
   id: string;
@@ -7,7 +7,7 @@ export interface IGetEmployee {
   email: string;
   phone: string;
   password: string;
-  occurrence: IOccurrence[];
+  occurrence: IGetOccurrence[];
 }
 
 export interface ICreateEmployee {

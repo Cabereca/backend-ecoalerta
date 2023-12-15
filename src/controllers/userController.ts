@@ -10,8 +10,8 @@ const findAllUsers = async (req: Request, res: Response) => {
 }
 
 const findUser = async (req: Request, res: Response) => {
-    const { email } = req.params;
-    const user = await userServices.findUser(email);
+    const { id } = req.params;
+    const user = await userServices.findUser(id);
     res.status(200).send(user);
 }
 
@@ -27,15 +27,15 @@ const createUser = async (req: Request, res: Response) => {
 }
 
 const updateUser = async (req: Request, res: Response) => {
-    const { email } = req.params;
+    const { id } = req.params;
     const user = req.body;
-    const updatedUser = await userServices.updateUser(email, user);
+    const updatedUser = await userServices.updateUser(id, user);
     res.status(200).send(updatedUser);
 }
 
 const deleteUser = async (req: Request, res: Response) => {
-    const { email } = req.params;
-    await userServices.deleteUser(email);
+    const { id } = req.params;
+    await userServices.deleteUser(id);
     res.sendStatus(204);
 }
 

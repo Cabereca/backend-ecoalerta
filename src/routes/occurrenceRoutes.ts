@@ -9,7 +9,8 @@ const routes = Router();
 
 const upload = multer(uploadsConfig);
 
-routes.get('/', adminMiddleware, occurrenceController.index);
+routes.get('/all', adminMiddleware, occurrenceController.index);
+routes.get('/:userId', userMiddleware, occurrenceController.show);
 routes.post(
   '/',
   userMiddleware,

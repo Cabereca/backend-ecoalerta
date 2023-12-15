@@ -20,7 +20,7 @@ export const userMiddleware = async (
     throw new UnauthorizedError('Não autorizado');
   }
   const [, token] = authorization.split(' ');
-  const { email } = jwt.verify(token, process.env.JWT_SECRET ?? '') as jwtDTO;
+  const { email } = jwt.verify(token, process.env.JWT_USER_SECRET ?? '') as jwtDTO;
 
   let user;
   const cache = await redisClient.get('user:' + email);
@@ -35,7 +35,6 @@ export const userMiddleware = async (
     await redisClient.set('user:' + email, JSON.stringify(user));
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { password, ...userWithoutPassword } = user;
-  req.user = userWithoutPassword;
+  req.user = user;
   next();
 };

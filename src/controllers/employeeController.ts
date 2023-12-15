@@ -4,8 +4,8 @@ import employeeService from '../services/employeeService';
 import { employeeValidateZod } from '../utils/validateEmployee';
 
 const show = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const employee = await employeeService.findEmployeeById(id);
+  const {id} = req.params;
+  const employee = await employeeService.findEmployee(id);
   return res.json(employee);
 };
 

@@ -2,7 +2,6 @@ import { PrismaClient } from '@prisma/client';
 import { ICreateOccurrence, IGetOccurrence } from '../dtos/OccurrenceDTO';
 import { ICreateImageOccurrence } from '../dtos/ImageOccurrenceDTO';
 import { v4 as uuidv4 } from 'uuid';
-import { Sql } from '@prisma/client/runtime/library';
 
 const prisma = new PrismaClient().$extends({
   model: {
@@ -57,6 +56,26 @@ const prisma = new PrismaClient().$extends({
       async findMany() {
         const occs: any =
           await prisma.$queryRaw`SELECT "id", "description", "userId", "employeeId", "created_at", "dateTime", "feedback", "title", "updated_at", "status", ST_AsText(location) as location FROM "Occurrence"`;
+
+        const occsParsed = occs.map((occ: any) => {
+          const location = occ.location
+            .replace('POINT(', '')
+            .replace(')', '')
+            .split(' ');
+          return {
+            ...occ,
+            location: {
+              lat: parseFloat(location[0]),
+              lng: parseFloat(location[1])
+            }
+          };
+        });
+
+        return occsParsed as IGetOccurrence[];
+      },
+      async findManyByUser(userId: string) {
+        const occs: any =
+          await prisma.$queryRaw`SELECT "id", "description", "userId", "employeeId", "created_at", "dateTime", "feedback", "title", "updated_at", "status", ST_AsText(location) as location FROM "Occurrence" WHERE "userId" = ${userId}`;
 
         const occsParsed = occs.map((occ: any) => {
           const location = occ.location

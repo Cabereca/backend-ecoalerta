@@ -38,7 +38,7 @@ model ImageOccurrence {
   created_at DateTime @default(now())
   updated_at DateTime @default(now())
 
-  Occurrence   Occurrence @relation(fields: [occurrenceId], references: [id])
+  Occurrence   Occurrence @relation(fields: [occurrenceId], references: [id], onDelete: Cascade)
   occurrenceId String
 }
 

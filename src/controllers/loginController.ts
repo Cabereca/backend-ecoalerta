@@ -22,11 +22,13 @@ const userLogin = async (req: Request, res: Response) => {
     }
     await client.set('user:' + email, JSON.stringify(user));
   }
+  
+
   const verifyPassword = await bcrypt.compare(password, user.password);
   if (!verifyPassword) {
     throw new UnauthorizedError('Usuário ou senha incorretos');
   }
-  const token = userServices.generateToken({ email: user.email });
+  const token = userServices.generateToken({ email: user.email});
   const { password: _, ...userWithoutPassword } = user;
 
   return res.send({
@@ -41,7 +43,7 @@ const employeeLogin = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   let employee;
-
+  
   const cache = await client.get('employee:' + email);
   if (cache) {
     employee = JSON.parse(cache);
@@ -52,13 +54,12 @@ const employeeLogin = async (req: Request, res: Response) => {
     }
     await client.set('employee:' + email, JSON.stringify(employee));
   }
-  const verifyPassword = await bcrypt.compare(password, employee.password);
-  console.log(verifyPassword, employee.password, password);
 
+  const verifyPassword = await bcrypt.compare(password, employee.password);
   if (!verifyPassword) {
     throw new UnauthorizedError('Usuário ou senha incorretos');
   }
-  const token = employeeService.generateToken({ email: employee.email });
+  const token = employeeService.generateToken({ email: employee.email});
   const { password: _, ...userWithoutPassword } = employee;
 
   return res.send({

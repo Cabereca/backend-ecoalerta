@@ -16,17 +16,31 @@ const hashPassword = async (password: string) => {
 };
 
 const generateToken = ({ email }: TokenType) => {
-  const token = jwt.sign({ email }, process.env.JWT_SECRET ?? '', {
+  const token = jwt.sign({ email }, process.env.JWT_USER_SECRET ?? '', {
     expiresIn: '8h'
   });
   return token;
 };
+
+const findUserById = async (id: string) => {
+  if (!id) throw new BadRequestError('ID is required');
+  const user = await prisma.user.findUnique({ where: { id } });
+  return user;
+}
 
 const findUserByEmail = async (email: string) => {
   if (!email) throw new BadRequestError('Email is required');
   const user = await prisma.user.findUnique({ where: { email } });
   return user;
 };
+
+const findUserInCache = async (email: string) => {
+  const user = await redisClient.get('user:' + email);
+  if (user) {
+    return JSON.parse(user);
+  }
+  return null;
+}
 
 const showAllUsers = async () => {
   const users = await prisma.user.findMany({
@@ -41,8 +55,8 @@ const showAllUsers = async () => {
   return users;
 };
 
-const findUser = async (email: string) => {
-  const user = await findUserByEmail(email);
+const findUser = async (id: string) => {
+  const user = await findUserById(id);
   if (!user) throw new BadRequestError('User not found');
   const { password, ...userWithoutPassword } = user;
   return userWithoutPassword;
@@ -67,11 +81,16 @@ const createUser = async (user: IUserInputDTO) => {
   return { user: { ...userWithoutPassword }, token };
 };
 
-const updateUser = async (email: string, userData: IUserInputDTO) => {
-  const user = await findUserByEmail(email);
+const updateUser = async (id: string, userData: IUserInputDTO) => {
+  if (!id) throw new BadRequestError('ID is required');
+  const user = await findUserById(id);
   if (!user) throw new BadRequestError('User not found');
+  const userInCache = await findUserInCache(user.email);
+  if (userInCache) {
+    await redisClient.del('user:' + user.email);
+  }
   const updatedUser = await prisma.user.update({
-    where: { email },
+    where: { id },
     data: {
       cpf: userData.cpf ?? user.cpf,
       name: userData.name ?? user.name,
@@ -79,20 +98,24 @@ const updateUser = async (email: string, userData: IUserInputDTO) => {
       phone: userData.phone ?? user.phone
     }
   });
-  await redisClient.del('user:' + email);
-  await redisClient.set(
-    'user:' + userData.email ?? 'user:' + email,
-    JSON.stringify(updatedUser)
-  );
+  await redisClient.del('user:' + user.email);
+  if (userData.email) {
+    await redisClient.set(
+      'user:' + userData.email,
+      JSON.stringify(updatedUser)
+    );
+  }
+  await redisClient.set('user:' + updatedUser.email, JSON.stringify(updatedUser));
+  const token = generateToken({ email: updatedUser.email });
   const { password, ...userWithoutPassword } = updatedUser;
-  return userWithoutPassword;
+  return { user: { ...userWithoutPassword }, token };
 };
 
-const deleteUser = async (email: string) => {
-  const user = await findUserByEmail(email);
+const deleteUser = async (id: string) => {
+  const user = await findUserById(id);
   if (!user) throw new BadRequestError('User not found');
-  await redisClient.del('user:' + email);
-  await prisma.user.delete({ where: { email } });
+  await redisClient.del('user:' + user.email);
+  await prisma.user.delete({ where: { email: user.email } });
 };
 
 export const userServices = {

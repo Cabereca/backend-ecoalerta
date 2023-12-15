@@ -19,6 +19,7 @@ const prisma = new PrismaClient();
 const hashPassword = async (password: string) => {
   return await hash(password, 10);
 };
+
 interface TokenType {
   email: string;
 }
@@ -86,60 +87,86 @@ const findEmployeeByRegistrationNumber = async (registrationNumber: string) => {
   return employee;
 };
 
+const findEmployee = async (id: string) => {
+  if (!id) {
+    throw new BadRequestError('Id is required');
+  }
+  const employee = await findEmployeeById(id);
+  if (!employee) {
+    throw new NotFoundError('Employee not found');
+  }
+  const { password, ...employeeWithoutPassword } = employee;
+  return employeeWithoutPassword;
+}
+
 const createEmployee = async (data: ICreateEmployee) => {
   if (!data) {
     throw new BadRequestError('Data is required');
   }
+  const employeeExists = await prisma.employee.findUnique({
+    where: {
+      email: data.email
+    }
+  });
+  if (employeeExists) throw new BadRequestError('Employee already exists');
+  const hashedPassword = await hashPassword(data.password);
   const employee = await prisma.employee.create({
     data: {
-      ...data,
-      password: await hashPassword(data.password)
+      registrationNumber: data.registrationNumber,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      password: hashedPassword
     }
   });
   if (!employee) {
     throw new InternalServerError('Employee not created');
   }
   await redisClient.set('employee:' + employee.email, JSON.stringify(employee));
-  return employee;
+  const { password, ...userWithoutPassword } = employee;
+  const token = generateToken({ email: employee.email });
+  return { employee: { ...userWithoutPassword }, token };
 };
 
-const updateEmployee = async (email: string, data: IUpdateEmployee) => {
-  if (!email) {
-    throw new BadRequestError('Email is required');
+const updateEmployee = async (id: string, data: IUpdateEmployee) => {
+  if (!id) {
+    throw new BadRequestError('Id is required');
   }
   if (!data) {
     throw new BadRequestError('Data is required');
   }
-  const employeeInCache = await findEmployeeInCache(email);
+  const employee = await findEmployeeById(id);
+  const employeeInCache = await findEmployeeInCache(employee.email);
   if (employeeInCache) {
-    await redisClient.del('employee:' + email);
+    await redisClient.del('employee:' + employee.email);
   }
-  const employee = await prisma.employee.update({
+  const updatedEmployee = await prisma.employee.update({
     where: {
-      email
+      id
     },
     data: {
       ...data,
       password: await hashPassword(String(data.password))
     }
   });
-  if (!employee) {
+  if (!updatedEmployee) {
     throw new InternalServerError('Employee not updated');
   }
-  await redisClient.set('employee:' + employee.email, JSON.stringify(employee));
-  return employee;
+  await redisClient.set('employee:' + updatedEmployee.email, JSON.stringify(updatedEmployee));
+  const { password, ...employeeWithoutPassword } = updatedEmployee;
+  return employeeWithoutPassword;
 };
 
-const deleteEmployee = async (email: string) => {
-  if (!email) {
-    throw new BadRequestError('Email is required');
+const deleteEmployee = async (id: string) => {
+  if (!id) {
+    throw new BadRequestError('Id is required');
   }
   const employee = await prisma.employee.delete({
     where: {
-      email
+      id
     }
   });
-  await redisClient.del('employee:' + email);
+  await redisClient.del('employee:' + employee.email);
   if (!employee) {
     throw new InternalServerError('Employee not deleted');
   }
@@ -149,6 +176,7 @@ export default {
   findEmployeeById,
   findEmployeeByEmail,
   findEmployeeByRegistrationNumber,
+  findEmployee,
   createEmployee,
   updateEmployee,
   deleteEmployee,

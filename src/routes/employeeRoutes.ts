@@ -5,9 +5,9 @@ import { adminMiddleware } from '../middlewares/adminMiddleware';
 
 const router = Router();
 
-router.get('/:email', adminMiddleware, employeeController.show);
+router.get('/:id', adminMiddleware, employeeController.show);
 router.post('/', employeeController.store);
-router.put('/:email', adminMiddleware, employeeController.update);
-router.delete('/:email', adminMiddleware, employeeController.destroy);
+router.put('/:id', adminMiddleware, employeeController.update);
+router.delete('/:id', adminMiddleware, employeeController.destroy);
 
 export default router;
