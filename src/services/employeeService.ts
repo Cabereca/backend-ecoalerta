@@ -21,7 +21,6 @@ const findEmployeeInCache = async (id: string) => {
   }
   return null;
 };
-
 const findEmployeeById = async (id: string) => {
   if (!id) {
     throw new BadRequestError('Id is required');
