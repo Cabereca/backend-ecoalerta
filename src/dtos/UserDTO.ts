@@ -1,13 +1,13 @@
-import { type IOccurrence } from "./OccurrenceDTO";
+import { type IGetOccurrence } from './OccurrenceDTO';
 
 export interface IUser {
-    id: string;
-    cpf: string;
-    name: string;
-    email: string;
-    phone: string;
-    password: string;
-    occurrence: IOccurrence[];
+  id: string;
+  cpf: string;
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  occurrence: IGetOccurrence[];
 }
 
 export interface IUserInputDTO {
@@ -17,4 +17,3 @@ export interface IUserInputDTO {
     phone: string;
     password: string;
 }
-
