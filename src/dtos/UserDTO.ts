@@ -9,3 +9,11 @@ export interface IUser {
   password: string;
   occurrence: IGetOccurrence[];
 }
+
+export interface IUserInputDTO {
+    cpf: string;
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+}

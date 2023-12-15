@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { type IUser } from '../dtos/UserDTO';
+import { type IUserInputDTO } from '../dtos/UserDTO';
 import { BadRequestError, InternalServerError } from '../helpers/api-errors';
 import jwt from 'jsonwebtoken';
 import { hash } from 'bcrypt';
@@ -36,7 +36,7 @@ const showAllUsers = async () => {
             phone: true
         }
     })
-        return users;
+    return users;
 }
 
 const findUser = async (email: string) => {
@@ -46,7 +46,7 @@ const findUser = async (email: string) => {
     return userWithoutPassword;
 };
 
-const createUser = async (user: IUser) => {  
+const createUser = async (user: IUserInputDTO) => {
     const userExists = await findUserByEmail(user.email);
     if (userExists) throw new BadRequestError('User already exists');
     const hashedPassword = await hashPassword(user.password);
@@ -65,7 +65,7 @@ const createUser = async (user: IUser) => {
     return { user: { ...userWithoutPassword }, token };
 };
 
-const updateUser = async (email: string, userData: Partial<IUser>) => {
+const updateUser = async (email: string, userData: IUserInputDTO) => {
     const user = await findUserByEmail(email);
     if (!user) throw new BadRequestError('User not found');
     const updatedUser = await prisma.user.update({
