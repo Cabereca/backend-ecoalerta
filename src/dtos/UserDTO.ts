@@ -10,3 +10,11 @@ export interface IUser {
     occurrence: IOccurrence[];
 }
 
+export interface IUserInputDTO {
+    cpf: string;
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+}
+

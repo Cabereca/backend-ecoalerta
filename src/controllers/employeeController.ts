@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { type Request, type Response } from 'express';
 import employeeService from '../services/employeeService';
+import { employeeValidateZod } from '../utils/validateEmployee';
 
 const show = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -9,6 +10,11 @@ const show = async (req: Request, res: Response) => {
 };
 
 const store = async (req: Request, res: Response) => {
+  const result = employeeValidateZod(req.body);
+  if (!result.success) {
+    const formattedError = result.error.format();
+    return res.status(400).send(formattedError);
+  }
   const employee = await employeeService.createEmployee(req.body);
   return res.status(201).json(employee);
 };

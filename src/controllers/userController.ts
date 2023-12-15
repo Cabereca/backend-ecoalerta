@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/strict-boolean-expressions */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { type Request, type Response } from 'express';
 import { userServices } from "../services/userService";
+import { userValidateZod } from '../utils/validateUser';
 
 const findAllUsers = async (req: Request, res: Response) => {
     const users = await userServices.showAllUsers();
@@ -14,6 +16,11 @@ const findUser = async (req: Request, res: Response) => {
 }
 
 const createUser = async (req: Request, res: Response) => {
+    const result = userValidateZod(req.body);
+    if (!result.success) {
+        const formattedError = result.error.format();
+        return res.status(400).send(formattedError);
+    }
     const user = req.body;
     const newUser = await userServices.createUser(user);
     res.status(201).send(newUser);

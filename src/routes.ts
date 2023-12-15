@@ -6,6 +6,7 @@ import { login } from './controllers/loginController';
 
 const routes = Router();
 
+routes.post('/login', login);
 routes.use('/users', userRoutes);
 routes.use('/employee', employeeRoutes);
 
