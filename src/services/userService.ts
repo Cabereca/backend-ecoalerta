@@ -5,25 +5,20 @@ import { BadRequestError, InternalServerError } from '../helpers/api-errors';
 import jwt from 'jsonwebtoken';
 import { hash } from 'bcrypt';
 import { prisma } from '../database/prisma';
+import redisClient from '../database/redis';
 
-interface TokenType { id: string }
+interface TokenType { email: string }
 
 const hashPassword = async (password: string) => {
     return await hash(password, 10);
 };
 
-const generateToken = ({ id }: TokenType) => {
-    const token = jwt.sign({ id }, process.env.JWT_SECRET ?? '', {
+const generateToken = ({ email }: TokenType) => {
+    const token = jwt.sign({ email }, process.env.JWT_SECRET ?? '', {
         expiresIn: '8h'
     });
     return token;
 };
-
-const findUserById = async (id: string) => {
-    if (!id) throw new BadRequestError('Id is required');
-    const user = await prisma.user.findUnique({ where: { id } });
-    return user;
-}
 
 const findUserByEmail = async (email: string) => {
     if (!email) throw new BadRequestError('Email is required');
@@ -44,14 +39,14 @@ const showAllUsers = async () => {
         return users;
 }
 
-const findUser = async (id: string) => {
-    const user = await findUserById(id);
+const findUser = async (email: string) => {
+    const user = await findUserByEmail(email);
     if (!user) throw new BadRequestError('User not found');
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword;
 };
 
-const createUser = async (user: IUser) => {
+const createUser = async (user: IUser) => {  
     const userExists = await findUserByEmail(user.email);
     if (userExists) throw new BadRequestError('User already exists');
     const hashedPassword = await hashPassword(user.password);
@@ -66,30 +61,33 @@ const createUser = async (user: IUser) => {
     });
     if (!newUser) throw new InternalServerError('Error creating user');
     const { password, ...userWithoutPassword } = newUser;
-    const token = generateToken({ id: user.id });
+    const token = generateToken({ email: user.email });
     return { user: { ...userWithoutPassword }, token };
 };
 
-const updateUser = async (id: string, userData: Partial<IUser>) => {
-    const user = await findUserById(id);
+const updateUser = async (email: string, userData: Partial<IUser>) => {
+    const user = await findUserByEmail(email);
     if (!user) throw new BadRequestError('User not found');
     const updatedUser = await prisma.user.update({
-        where: { id },
+        where: { email },
         data: {
-            cpf: userData.cpf,
-            name: userData.name,
-            email: userData.email,
-            phone: userData.phone
+            cpf: userData.cpf ?? user.cpf,
+            name: userData.name ?? user.name,
+            email: userData.email ?? user.email,
+            phone: userData.phone ?? user.phone
         }
     });
+    await redisClient.del(email);
+    await redisClient.set(userData.email ?? email, JSON.stringify(updatedUser));
     const { password, ...userWithoutPassword } = updatedUser;
     return userWithoutPassword;
 };
 
-const deleteUser = async (id: string) => {
-    const user = await findUserById(id);
+const deleteUser = async (email: string) => {
+    const user = await findUserByEmail(email);
     if (!user) throw new BadRequestError('User not found');
-    await prisma.user.delete({ where: { id } });
+    await redisClient.del(email);
+    await prisma.user.delete({ where: { email } });
 };
 
-export const userServices = { findUser, showAllUsers, createUser, updateUser, deleteUser, generateToken }
+export const userServices = { findUser, findUserByEmail, showAllUsers, createUser, updateUser, deleteUser, generateToken }

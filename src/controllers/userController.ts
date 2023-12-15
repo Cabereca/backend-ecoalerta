@@ -8,8 +8,8 @@ const findAllUsers = async (req: Request, res: Response) => {
 }
 
 const findUser = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const user = await userServices.findUser(id);
+    const { email } = req.params;
+    const user = await userServices.findUser(email);
     res.status(200).send(user);
 }
 
@@ -20,15 +20,15 @@ const createUser = async (req: Request, res: Response) => {
 }
 
 const updateUser = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const { email } = req.params;
     const user = req.body;
-    const updatedUser = await userServices.updateUser(id, user);
+    const updatedUser = await userServices.updateUser(email, user);
     res.status(200).send(updatedUser);
 }
 
 const deleteUser = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    await userServices.deleteUser(id);
+    const { email } = req.params;
+    await userServices.deleteUser(email);
     res.sendStatus(204);
 }
 
