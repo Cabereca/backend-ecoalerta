@@ -8,6 +8,5 @@ const routes = Router();
 
 routes.use('/users', userRoutes);
 routes.use('/employee', employeeRoutes);
-routes.post('/login', login);
 
 export default routes;
