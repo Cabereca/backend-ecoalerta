@@ -5,6 +5,7 @@ O EcoAlerta é um API RESTful onde você pode cadastrar ocorrências ambiemtais.
 ## Equipe
 - Flávio Henrique Marques de Sousa
 - Antonio Marcos Batista Rodrigues
+- João Pedro Oliveira Santos
 
 # Licença
 
