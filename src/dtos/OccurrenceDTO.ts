@@ -32,9 +32,3 @@ export interface ICreateOccurrence {
   employeeId?: string;
   ImageOccurrence: ICreateImageOccurrence[];
 }
-
-// export enum OccurrenceStatusa {
-//   OPEN = 'OPEN',
-//   IN_PROGRESS = 'IN_PROGRESS',
-//   CLOSED = 'CLOSED'
-// }

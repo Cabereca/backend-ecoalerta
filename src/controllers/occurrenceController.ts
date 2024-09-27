@@ -3,17 +3,14 @@ import occurrenceService from '../services/occurrenceService';
 
 const store = async (req: Request, res: Response) => {
   try {
-    // console.log("oie")
     let data = req.body;
     const userId = req.user?.id;
     const reqFiles = req.files as Express.Multer.File[];
-    // console.log(req.files);
     const files = reqFiles.map((file) => {
       return {
         path: file.filename
       };
     });
-    // const files: Array<any> = [];
     let lat, lng;
     data.location = JSON.parse(data.location);
     console.log(data.location)

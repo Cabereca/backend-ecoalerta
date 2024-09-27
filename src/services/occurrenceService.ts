@@ -10,7 +10,6 @@ import {
 const createOccurrence = async (occurrence: ICreateOccurrence, files: Array<any>) => {
   const { title, description, dateTime, status, location, userId, employeeId } =
     occurrence;
-  // console.log(status, dateTime, new Date(dateTime));
   const occ = await prisma.occurrence.create({
     title,
     description,
@@ -45,15 +44,12 @@ const findOccurrencies = async (userId: string) => {
         }
       });
 
-      // console.log(images);
-
       return {
         ...occ,
         images,
       }
     }
   ));
-  // console.log(occurrences);
 
   if (!oc) {
     throw new NotFoundError('Occurrence not found');
