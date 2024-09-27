@@ -40,9 +40,7 @@ const prisma = new PrismaClient().$extends({
         occ.ImageOccurrence.forEach(async (image) => {
           await prisma.$queryRaw`INSERT INTO "ImageOccurrence" ("id", "path", "occurrenceId") VALUES (${uuidv4()}, ${
             image.path
-          }, (SELECT "id" FROM "Occurrence" WHERE "userId" = ${
-            occ.userId
-          } LIMIT 1))`;
+          }, ${occId})`;
         });
 
         const createdOcc = prisma.occurrence.findUnique({
