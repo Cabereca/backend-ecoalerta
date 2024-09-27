@@ -66,19 +66,24 @@ const createUser = async (user: IUserInputDTO) => {
   const userExists = await findUserByEmail(user.email);
   if (userExists) throw new BadRequestError('User already exists');
   const hashedPassword = await hashPassword(user.password);
-  const newUser = await prisma.user.create({
-    data: {
-      cpf: user.cpf,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      password: hashedPassword
-    }
-  });
-  if (!newUser) throw new InternalServerError('Error creating user');
-  const { password, ...userWithoutPassword } = newUser;
-  const token = generateToken({ email: user.email });
-  return { user: { ...userWithoutPassword }, token };
+  try {
+    const newUser = await prisma.user.create({
+      data: {
+        cpf: user.cpf,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        password: hashedPassword
+      }
+    });
+
+    if (!newUser) throw new InternalServerError('Error creating user');
+    const { password, ...userWithoutPassword } = newUser;
+    const token = generateToken({ email: user.email });
+    return { user: { ...userWithoutPassword }, token };
+  } catch(err) {
+    console.log(err);
+  }
 };
 
 const updateUser = async (id: string, userData: IUserInputDTO) => {

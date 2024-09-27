@@ -2,27 +2,37 @@ import { Request, Response } from 'express';
 import occurrenceService from '../services/occurrenceService';
 
 const store = async (req: Request, res: Response) => {
-  let data = req.body;
-  const userId = req.user?.id;
-  const reqFiles = req.files as Express.Multer.File[];
-  const files = reqFiles.map((file) => {
-    return {
-      path: file.filename
+  try {
+    // console.log("oie")
+    let data = req.body;
+    const userId = req.user?.id;
+    const reqFiles = req.files as Express.Multer.File[];
+    // console.log(req.files);
+    const files = reqFiles.map((file) => {
+      return {
+        path: file.filename
+      };
+    });
+    // const files: Array<any> = [];
+    let lat, lng;
+    data.location = JSON.parse(data.location);
+    console.log(data.location)
+    lat = parseFloat(data.location.latitude);
+    lng = parseFloat(data.location.longitude);
+    data.location = {
+      lat,
+      lng
     };
-  });
-  let lat, lng;
-  const latlng = data.location.split(' ');
-  lat = parseFloat(latlng[0]);
-  lng = parseFloat(latlng[1]);
-  data.location = {
-    lat,
-    lng
-  };
-  data.userId = userId as string;
+    data.userId = userId as string;
 
-  const occ = await occurrenceService.createOccurrence(data, files);
+    console.log(data, files)
 
-  return res.status(201).send(occ);
+    const occ = await occurrenceService.createOccurrence(data, files);
+
+    return res.status(201).send(occ);
+  } catch(error) {
+    console.log(error)
+  }
 };
 
 const show = async (req: Request, res: Response) => {
@@ -40,7 +50,13 @@ const index = async (req: Request, res: Response) => {
 const update = async (req: Request, res: Response) => {
   const { id } = req.params;
   const data = req.body;
-
+  if(data?.location) {
+    data.location = JSON.parse(data.location);
+    data.location = {
+      lat: data.location.latitude,
+      lng: data.location.longitude,
+    }
+  }
   const occ = await occurrenceService.updateOccurencies(id, data);
 
   return res.send(occ);

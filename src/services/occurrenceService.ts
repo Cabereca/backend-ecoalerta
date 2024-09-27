@@ -1,3 +1,4 @@
+import { promise } from 'zod';
 import { prisma } from '../database/prisma';
 import { IGetOccurrence, type ICreateOccurrence } from '../dtos/OccurrenceDTO';
 import {
@@ -6,9 +7,10 @@ import {
   NotFoundError
 } from '../helpers/api-errors';
 
-const createOccurrence = async (occurrence: ICreateOccurrence, files: any) => {
+const createOccurrence = async (occurrence: ICreateOccurrence, files: Array<any>) => {
   const { title, description, dateTime, status, location, userId, employeeId } =
     occurrence;
+  // console.log(status, dateTime, new Date(dateTime));
   const occ = await prisma.occurrence.create({
     title,
     description,
@@ -34,41 +36,64 @@ const findAllOccurencies = async () => {
 
 const findOccurrencies = async (userId: string) => {
   const oc = await prisma.occurrence.findManyByUser(userId);
+
+  const occurrences = await Promise.all(
+    oc.map(async (occ) => {
+      const images = await prisma.imageOccurrence.findMany({
+        where: {
+          occurrenceId: occ.id
+        }
+      });
+
+      // console.log(images);
+
+      return {
+        ...occ,
+        images,
+      }
+    }
+  ));
+  // console.log(occurrences);
+
   if (!oc) {
     throw new NotFoundError('Occurrence not found');
   }
 
-  return oc;
+  return occurrences;
 }
 
 const updateOccurencies = async (
   id: string,
   data: Partial<ICreateOccurrence>
 ) => {
-  const oc = await prisma.occurrence.findUnique({
-    where: {
-      id
-    }
-  });
-  
-  if (!oc) {
-    throw new NotFoundError('Occurrence not found');
-  }
-  const updatedOccurrence = await prisma.occurrence.update({
-    where: {
-      id
-    },
-    data: {
-      title: data.title ?? oc.title,
-      description: data.description ?? oc.description,
-      dateTime: data.dateTime ?? oc.dateTime,
-    }
-  });
-  if (!updatedOccurrence) {
-    throw new InternalServerError('Error on update occurrence');
-  }
+  try {
+    const oc = await prisma.occurrence.findUnique({
+      where: {
+        id
+      }
+    });
 
-  return updatedOccurrence;
+    if (!oc) {
+      throw new NotFoundError('Occurrence not found');
+    }
+    const updatedOccurrence = await prisma.occurrence.update({
+      where: {
+        id
+      },
+      data: {
+        title: data.title ?? oc.title,
+        description: data.description ?? oc.description,
+        dateTime: data.dateTime ? new Date(data.dateTime) : oc.dateTime,
+      }
+    });
+    if (!updatedOccurrence) {
+      throw new InternalServerError('Error on update occurrence');
+    }
+
+    return updatedOccurrence;
+  } catch(err) {
+    console.log(err);
+  }
 };
 
 const deleteOccurencies = async (id: string) => {

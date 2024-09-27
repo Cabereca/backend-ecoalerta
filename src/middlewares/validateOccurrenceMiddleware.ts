@@ -6,10 +6,16 @@ export const validateOccurrenceMiddleware = async (
     res: Response,
     next: NextFunction
 ) => {
-    const result = validateOccurrence(req.body);
-    if (!result.success) {
-        const formattedError = result.error.format();
-        return res.status(400).send(formattedError);
-    }
+  try {
+    console.log("body", req.body)
+    // const result = validateOccurrence(req.body);
+    // if (!result.success) {
+    //     const formattedError = result.error.format();
+    //     console.log("deu ruim ", formattedError)
+    //     return res.status(400).send(formattedError);
+    // }
     next();
+  } catch(error) {
+    console.log(error)
+  }
 };
