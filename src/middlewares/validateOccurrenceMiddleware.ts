@@ -8,12 +8,6 @@ export const validateOccurrenceMiddleware = async (
 ) => {
   try {
     console.log("body", req.body)
-    // const result = validateOccurrence(req.body);
-    // if (!result.success) {
-    //     const formattedError = result.error.format();
-    //     console.log("deu ruim ", formattedError)
-    //     return res.status(400).send(formattedError);
-    // }
     next();
   } catch(error) {
     console.log(error)
