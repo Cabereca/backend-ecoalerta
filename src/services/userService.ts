@@ -83,6 +83,7 @@ const createUser = async (user: IUserInputDTO) => {
     return { user: { ...userWithoutPassword }, token };
   } catch(err) {
     console.log(err);
+    throw new InternalServerError('Error creating user');
   }
 };
 

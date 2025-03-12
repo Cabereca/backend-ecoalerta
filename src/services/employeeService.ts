@@ -100,32 +100,37 @@ const findEmployee = async (id: string) => {
 }
 
 const createEmployee = async (data: ICreateEmployee) => {
-  if (!data) {
-    throw new BadRequestError('Data is required');
-  }
-  const employeeExists = await prisma.employee.findUnique({
-    where: {
-      email: data.email
+  try {
+    if (!data) {
+      throw new BadRequestError('Data is required');
     }
-  });
-  if (employeeExists) throw new BadRequestError('Employee already exists');
-  const hashedPassword = await hashPassword(data.password);
-  const employee = await prisma.employee.create({
-    data: {
-      registrationNumber: data.registrationNumber,
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      password: hashedPassword
+    const employeeExists = await prisma.employee.findUnique({
+      where: {
+        email: data.email
+      }
+    });
+    if (employeeExists) throw new BadRequestError('Employee already exists');
+    const hashedPassword = await hashPassword(data.password);
+    const employee = await prisma.employee.create({
+      data: {
+        registrationNumber: data.registrationNumber,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        password: hashedPassword
+      }
+    });
+    if (!employee) {
+      throw new InternalServerError('Employee not created');
     }
-  });
-  if (!employee) {
-    throw new InternalServerError('Employee not created');
+    await redisClient.set('employee:' + employee.email, JSON.stringify(employee));
+    const { password, ...userWithoutPassword } = employee;
+    const token = generateToken({ email: employee.email });
+    return { employee: { ...userWithoutPassword }, token };
+  } catch(err) {
+    console.log(err);
+    throw new InternalServerError('Error creating employee');
   }
-  await redisClient.set('employee:' + employee.email, JSON.stringify(employee));
-  const { password, ...userWithoutPassword } = employee;
-  const token = generateToken({ email: employee.email });
-  return { employee: { ...userWithoutPassword }, token };
 };
 
 const updateEmployee = async (id: string, data: IUpdateEmployee) => {

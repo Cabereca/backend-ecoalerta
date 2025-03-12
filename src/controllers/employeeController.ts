@@ -11,7 +11,10 @@ const show = async (req: Request, res: Response) => {
 
 const store = async (req: Request, res: Response) => {
   const employee = await employeeService.createEmployee(req.body);
-  return res.status(201).json(employee);
+  return res.status(201).json({
+    status: "ok",
+    employee
+  });
 };
 
 const update = async (req: Request, res: Response) => {
